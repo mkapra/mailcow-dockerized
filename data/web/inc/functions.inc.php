@@ -1165,7 +1165,10 @@ function admin_api($access, $action, $data = null) {
             if (empty($val)) {
               continue;
             }
-            if (!filter_var($val, FILTER_VALIDATE_IP)) {
+			$split = explode('/', $val);
+			$ip = $split[0];
+			$cidr = $split[1];
+            if (!filter_var($ip, FILTER_VALIDATE_IP) || $cidr > 32) {
               $_SESSION['return'][] =  array(
                 'type' => 'warning',
                 'log' => array(__FUNCTION__, $data),
@@ -1250,7 +1253,10 @@ function admin_api($access, $action, $data = null) {
             if (empty($val)) {
               continue;
             }
-            if (!filter_var($val, FILTER_VALIDATE_IP)) {
+			$split = explode('/', $val);
+			$ip = $split[0];
+			$cidr = $split[1];
+            if (!filter_var($ip, FILTER_VALIDATE_IP) || $cidr > 32) {
               $_SESSION['return'][] =  array(
                 'type' => 'warning',
                 'log' => array(__FUNCTION__, $data),

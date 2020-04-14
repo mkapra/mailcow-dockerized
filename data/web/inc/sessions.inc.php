@@ -52,8 +52,31 @@ if (!empty($_SERVER['HTTP_X_API_KEY'])) {
   if (!empty($api_return['api_key'])) {
     $skip_ip_check = ($api_return['skip_ip_check'] == 1);
     $remote = get_remote_ip(false);
-    $allow_from = array_map('trim', preg_split( "/( |,|;|\n)/", $api_return['allow_from']));
-    if (in_array($remote, $allow_from) || $skip_ip_check === true) {
+
+	$is_allowed = false;
+	$allow_from = array_map('trim', preg_split( "/( |,|;|\n)/", $api_return['allow_from']));
+
+	$remote_long = ip2long($remote);
+	foreach ($allow_from as &$ip) {
+		list($subnet, $cidr) = explode("/", $ip);
+
+		if ((!isset($cidr) || $cidr == 32) && $remote === $subnet) {
+			// If it is a normal IP without a CIDR or a /32
+			$is_allowed = true;
+			break;
+		} else {
+			// From https://stackoverflow.com/a/594134/11684772
+			$subnet = ip2long($subnet);
+			$mask = -1 << (32 - $cidr);
+			$subnet &= $mask;
+
+			if (($remote_long & $mask) == $subnet) {
+				$is_allowed = true;
+			}
+		}
+	}
+
+    if ($is_allowed || $skip_ip_check === true) {
       $_SESSION['mailcow_cc_username'] = 'API';
       $_SESSION['mailcow_cc_role'] = 'admin';
       $_SESSION['mailcow_cc_api'] = true;
